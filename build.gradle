@@ -95,8 +95,8 @@ dependencies {
 }
 
 accurest {
-    baseClassForTests = 'pl.devoxx.butelkatr.bottling.BaseMockMvcSpec'
-    basePackageForTests = 'pl.devoxx'
+    baseClassForTests = 'pl.codepot.butelkatr.bottling.BaseMockMvcSpec'
+    basePackageForTests = 'pl.codepot'
     contractsDslDir = contractsDir
     generatedTestSourcesDir = file("${project.buildDir}/generated-sources/accurest")
     stubsOutputDir = wiremockStubsOutputDir
