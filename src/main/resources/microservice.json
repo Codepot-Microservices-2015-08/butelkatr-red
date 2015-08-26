@@ -1,10 +1,7 @@
 {
-    "pl": {
-        "this": "pl/devoxx/butelkatr",
+    "red": {
+        "this": "pl/codepot/butelkatr",
         "dependencies": {
-            "prezentatr": {
-                "path": "pl/devoxx/prezentatr"
-            }
         }
     }
 }
