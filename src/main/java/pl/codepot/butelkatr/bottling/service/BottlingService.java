@@ -6,6 +6,8 @@ import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
 import com.nurkiewicz.asyncretry.RetryExecutor;
 import com.ofg.infrastructure.web.resttemplate.fluent.ServiceRestClient;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.codepot.butelkatr.bottling.model.BottlesOrder;
@@ -15,6 +17,8 @@ import pl.codepot.butelkatr.bottling.model.BottlesOrder;
  */
 @Service
 public class BottlingService {
+
+    private static Logger log = LoggerFactory.getLogger(BottlingService.class);
 
     @Autowired
     private BottlingAsyncExecutor bottlingAsyncExecutor;
@@ -36,12 +40,14 @@ public class BottlingService {
     public void orderBottles(final BottlesOrder bottlesOrder) {
         synchronized (this) {
             final int totalWortSupplied = wortSupplied.addAndGet(bottlesOrder.getWort());
-
+            log.info("######## totalWortSupplied: " + totalWortSupplied);
             if (totalWortSupplied > BOTTLING_STARTED_THRESHOLD) {
+
                 notifyBottlingStarted();
                 int expectedBottles = totalWortSupplied / BOTTLING_STARTED_THRESHOLD;
                 wortSupplied.getAndAdd(-expectedBottles * BOTTLING_STARTED_THRESHOLD);
 
+                log.info("######## bottling started");
                 bottlingAsyncExecutor.bottle(expectedBottles, this::notifyBottlingFinished);
             }
         }
