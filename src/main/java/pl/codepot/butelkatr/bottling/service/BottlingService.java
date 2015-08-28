@@ -16,13 +16,16 @@ import pl.codepot.butelkatr.bottling.model.BottlesOrder;
 @Service
 public class BottlingService {
 
+    @Autowired
+    private BottlingAsyncExecutor bottlingAsyncExecutor;
+
     public static final int BOTTLING_STARTED_THRESHOLD = 1000;
 
     private final ServiceRestClient serviceRestClient;
 
     private final RetryExecutor retryExecutor;
 
-    private AtomicInteger bottlesOrdered = new AtomicInteger(0);
+    private AtomicInteger wortSupplied = new AtomicInteger(0);
 
     @Autowired
     public BottlingService(final ServiceRestClient serviceRestClient, final RetryExecutor retryExecutor) {
@@ -31,27 +34,18 @@ public class BottlingService {
     }
 
     public void orderBottles(final BottlesOrder bottlesOrder) {
+        synchronized (this) {
+            final int totalWortSupplied = wortSupplied.addAndGet(bottlesOrder.getWort());
 
-        final int orderdSum = bottlesOrdered.addAndGet(bottlesOrder.getWort());
-        //TODO: synchronization
-        if (orderdSum > BOTTLING_STARTED_THRESHOLD) {
-            notifyBottlingStarted();
+            if (totalWortSupplied > BOTTLING_STARTED_THRESHOLD) {
+                notifyBottlingStarted();
+                int expectedBottles = totalWortSupplied / BOTTLING_STARTED_THRESHOLD;
+                wortSupplied.getAndAdd(-expectedBottles * BOTTLING_STARTED_THRESHOLD);
 
-            int divid = orderdSum / BOTTLING_STARTED_THRESHOLD;
-            bottlesOrdered.addAndGet(-divid * BOTTLING_STARTED_THRESHOLD);
-            sleep(divid * 2000);
-            int bottled = (int) ((divid * BOTTLING_STARTED_THRESHOLD) * 0.8);
-
-            notifyBottlingFinished(bottled);
+                bottlingAsyncExecutor.bottle(expectedBottles, this::notifyBottlingFinished);
+            }
         }
     }
-
-//    private int doBottling(final int orderdSum) {
-//        int divid = orderdSum / BOTTLING_STARTED_THRESHOLD;
-//        bottlesOrdered.addAndGet(-divid * BOTTLING_STARTED_THRESHOLD);
-//        sleep(divid * 2000);
-//        return (int) ((divid * BOTTLING_STARTED_THRESHOLD) * 0.8);
-//    }
 
     private void notifyBottlingFinished(final int bottled) {
         serviceRestClient.forService("prezentatr-red")
@@ -80,11 +74,4 @@ public class BottlingService {
     }
 
 
-    private void sleep(long milis) {
-        try {
-            Thread.sleep(milis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
