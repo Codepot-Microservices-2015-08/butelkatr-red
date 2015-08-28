@@ -14,4 +14,11 @@ public class BottlesOrder {
     public void setWort(Integer wort) {
         this.wort = wort;
     }
+
+    @Override
+    public String toString() {
+        return "BottlesOrder{" +
+                "wort=" + wort +
+                '}';
+    }
 }
