@@ -1,7 +1,10 @@
 {
-    "red": {
-        "this": "pl/codepot/butelkatr-red",
-        "dependencies": {
-        }
+  "red": {
+    "this": "pl/codepot/butelkatr-red",
+    "dependencies": {
+      "prezentatr": {
+        "path": "pl/codepot/prezentatr-red"
+      }
     }
+  }
 }
